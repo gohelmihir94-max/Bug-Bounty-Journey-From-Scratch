@@ -1,8 +1,5 @@
-# Bug-Bounty-Journey-From-Scratch
-A personal journey into bug bounty hunting, covering web security fundamentals, practical labs, vulnerability testing, methodologies, and security research documentation.
-
 # BUG BOUNTY JOURNEY
-### From Scratch to Vulnerability Research
+### Learning Bug Bounty from Scratch
 
 A personal documentation repository covering Web Application Security, practical security testing, vulnerability analysis, and bug bounty learning.
 
