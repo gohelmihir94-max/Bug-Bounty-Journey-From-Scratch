@@ -6,10 +6,7 @@ Email OTP Verification / Authentication Workflow Issue
 
 ## Summary
 
-During testing of the TaskBear registration process, OTP verification requests were captured using Burp Suite.
-The verification endpoint returned an `HTTP/2 201 Created` response containing the contact information and a `verifiedAt` timestamp.
-During a second test, a different OTP value (`123456`) was submitted. The captured response also showed `201 Created`, and the registration process proceeded to the next step.
-This behaviour requires further validation to determine whether invalid OTPs are being accepted by the backend or whether the registration flow is relying on client-side response handling.
+During TaskBear registration testing, Burp Suite captured `201 Created` responses for OTP submissions, including an incorrect OTP (`123456`). The registration process proceeded to the next step. Server-side OTP validation still requires confirmation.
 
 ## Vulnerable Endpoint
 
@@ -17,17 +14,12 @@ This behaviour requires further validation to determine whether invalid OTPs are
 
 ## Steps to Reproduce
 
-1. Open the TaskBear registration page.
-2. Start registration using a test email address.
-3. Proceed to the OTP verification page.
-4. Capture the OTP verification request using Burp Suite.
-5. Observe the response returned after the first OTP submission.
-6. Start a second test using another controlled email address.
-7. Submit the OTP value `123456`.
-8. Capture the corresponding request and response in Burp Suite.
-9. Observe the `HTTP/2 201 Created` response.
-10. Observe that the application proceeds to the registration details page.
-11. Continue through the registration workflow and observe the next onboarding page.
+1. Open the TaskBear registration page and start registration using a temporary email address.
+2. Submit the OTP and capture the verification request and successful response using Burp Suite.
+3. Start a new registration using another controlled email address and proceed to the OTP verification page.
+4. Submit an incorrect OTP (`123456`) and capture the verification request and response in Burp Suite.
+5. Compare the captured responses and inspect the verification status and response body. Document any response manipulation performed during authorized testing.
+6. Forward the response and observe whether the application proceeds to the registration details page and subsequent onboarding process.
 
 ## Payload / Response Observed
 
