@@ -1,131 +1,90 @@
-# OTP Bypass – Practical Report
+# OTP Verification Bypass via Response Handling
 
-## 1. Practical Overview
+## Vulnerability Type
 
-This practical involved testing the OTP verification process during account registration on a web application.
+Email OTP Verification / Authentication Workflow Issue
 
-The main focus was to understand how the application handles invalid OTP submissions and how HTTP responses can be inspected and modified using Burp Suite.
+## Summary
 
-**Testing Status:** Potential Finding – Pending Validation
+During testing of the TaskBear registration process, OTP verification requests were captured using Burp Suite.
+The verification endpoint returned an `HTTP/2 201 Created` response containing the contact information and a `verifiedAt` timestamp.
+During a second test, a different OTP value (`123456`) was submitted. The captured response also showed `201 Created`, and the registration process proceeded to the next step.
+This behaviour requires further validation to determine whether invalid OTPs are being accepted by the backend or whether the registration flow is relying on client-side response handling.
 
-## 2. Objective
+## Vulnerable Endpoint
 
-- Understand how OTP verification works during registration.
-- Observe how the application handles invalid OTP submissions.
-- Inspect HTTP requests and responses using Burp Suite.
-- Understand the difference between client-side response handling and server-side verification.
+`POST https://[REDACTED_API_HOST]/api/v1/uwa/auth/otp/verify`
 
-## 3. Tools Used
+## Steps to Reproduce
 
-| Tool | Purpose |
-|---|---|
-| Burp Suite Professional | Inspecting HTTP requests and responses |
-| Firefox | Accessing the web application |
-| TempMail | Receiving registration verification emails |
+1. Open the TaskBear registration page.
+2. Start registration using a test email address.
+3. Proceed to the OTP verification page.
+4. Capture the OTP verification request using Burp Suite.
+5. Observe the response returned after the first OTP submission.
+6. Start a second test using another controlled email address.
+7. Submit the OTP value `123456`.
+8. Capture the corresponding request and response in Burp Suite.
+9. Observe the `HTTP/2 201 Created` response.
+10. Observe that the application proceeds to the registration details page.
+11. Continue through the registration workflow and observe the next onboarding page.
 
-## 4. Testing Steps
+## Payload / Response Observed
 
-1. Opened the TaskBear registration page.
-2. Started the registration process using a temporary email address.
-3. Reached the OTP verification page.
-4. Received the OTP through the temporary email inbox.
-5. Entered an invalid OTP for testing.
-6. Captured and inspected the HTTP response using Burp Suite.
-7. Observed that the original response returned `401 Unauthorized`.
-8. Modified the HTTP response locally in Burp Suite to use `201 Created` with a modified response body.
-9. Forwarded the modified response to the browser.
-10. Observed that the registration process proceeded.
-11. Account creation and successful login were subsequently reported.
+The captured response contained the following structure:
 
-**Note:** The exact OTP value, email address and sensitive request data are intentionally excluded.
+```http
+HTTP/2 201 Created
+Content-Type: application/json; charset=utf-8
+X-Powered-By: Express
+X-Ratelimit-Limit: 10
+X-Ratelimit-Remaining: 9
 
-## 5. Observations
+{
+  "contact": "[REDACTED_EMAIL]",
+  "verifiedAt": "[REDACTED_TIMESTAMP]"
+}
+```
 
-During testing, the following behaviour was observed:
+## Proof of Concept (PoC)
 
-- The application provided an OTP verification step during registration.
-- An invalid OTP submission returned `401 Unauthorized`.
-- After local response modification, the browser proceeded with the registration flow.
-- Account creation and successful login were reported after the modified response.
+### Screenshot 1: OTP Verification Request
+<img width="940" height="529" alt="image" src="https://github.com/user-attachments/assets/ec19c07d-2c9a-4733-aee3-ed7c99f63698" />
 
-## 6. Technical Analysis
 
-The testing demonstrated that modifying an HTTP response locally can affect how the browser handles the registration flow.
+### Screenshot 2: OTP Verification Response
+<img width="940" height="529" alt="image" src="https://github.com/user-attachments/assets/b3917e5c-099c-4a44-8019-7574b2c640a3" />
 
-However, a successful browser-side transition does not necessarily mean that the server accepted an invalid OTP.
 
-The actual email verification status and server-side OTP validation behaviour have not yet been independently confirmed.
+### Screenshot 3: Second  OTP Verification Request
+<img width="940" height="529" alt="image" src="https://github.com/user-attachments/assets/ae55a561-b78f-4c5e-8a20-6560229359f5" />
 
-## 7. Expected Result
 
-The application should reject an invalid OTP and prevent the email verification process from being completed.
+### Screenshot 4: Response to Second Verification Request
+<img width="940" height="529" alt="image" src="https://github.com/user-attachments/assets/70b4eed6-2206-461e-ae50-edbeff66ccc5" />
 
-OTP verification should be performed and enforced by the server rather than relying on the response displayed by the browser.
 
-## 8. Actual Result
+### Screenshot 5: Registration Page
+<img width="940" height="529" alt="image" src="https://github.com/user-attachments/assets/c542016c-58bc-4299-a907-289aad6800ae" />
 
-The original invalid OTP submission returned `401 Unauthorized`.
+### Screenshot 7: Onboarding Page
+<img width="940" height="529" alt="image" src="https://github.com/user-attachments/assets/cbb421fd-3fb9-48ad-ba23-87a7fcf83177" />
 
-After modifying the response locally to use `201 Created`, the registration flow proceeded.
 
-Account creation and successful login were reported, but the server-side email verification status remains unconfirmed.
+## Impact
 
-## 9. Potential Security Impact
+- The registration workflow proceeded after the OTP verification requests.
+- Email verification enforcement may be affected.
+- If the backend accepts an invalid OTP, users may be able to register without proving ownership of their email address.
 
-If the server accepts an account as verified without validating the submitted OTP, an unauthorized user may be able to bypass email ownership verification.
 
-Possible consequences include:
+## Recommendation for Fix
 
-- Registration without successfully verifying email ownership.
-- Circumvention of email verification requirements.
-- Access to functionality restricted to verified accounts, depending on the application's implementation.
+1. Validate OTPs on the server before accepting verification.
+2. Do not rely on client-side response handling for authentication decisions.
+3. Maintain verification status on the server.
+4. Bind OTPs to the correct email address and registration session.
+5. Enforce OTP expiration and single-use restrictions.
+6. Apply rate limits to OTP verification attempts.
 
-These impacts have not yet been independently established.
 
-## 10. Result
-
-**Current Classification:** Potential OTP Verification Issue
-
-The test demonstrated that local HTTP response manipulation affected the registration flow.
-
-Further authorized testing is required to determine whether the server independently enforces OTP verification.
-
-No confirmed server-side OTP bypass is being claimed at this stage.
-
-## 11. Evidence
-
-Screenshots and video evidence have not been attached to this initial report.
-
-Evidence can be added later, including:
-
-- OTP verification page.
-- Original HTTP response.
-- Locally modified HTTP response.
-- Registration flow after modification.
-
-All evidence must be sanitized before being included in a public repository.
-
-## 12. Suggested Remediation
-
-- Validate OTPs on the server.
-- Do not trust client-side response modifications.
-- Maintain verification status on the server.
-- Ensure OTPs expire after their validity period.
-- Prevent successful reuse of an OTP.
-- Apply suitable limits to repeated OTP attempts.
-- Verify account permissions on protected server-side operations.
-
-## 13. What I Learned
-
-- How OTP verification works during account registration.
-- How to inspect HTTP responses using Burp Suite.
-- What `401 Unauthorized` and `201 Created` indicate.
-- How local response manipulation can affect browser behaviour.
-- Why server-side validation is important.
-- Why additional testing is necessary before confirming a vulnerability.
-
----
-
-**Practical Status:** Initial Testing Completed – Further Validation Pending
-
-**Disclosure Status:** Not Submitted
