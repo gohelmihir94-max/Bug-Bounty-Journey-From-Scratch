@@ -10,7 +10,7 @@ During TaskBear registration testing, Burp Suite captured `201 Created` response
 
 ## Vulnerable Endpoint
 
-`POST https://[REDACTED_API_HOST]/api/v1/uwa/auth/otp/verify`
+`POST https://master.prod.api.taskbear.com.au/api/v1/uwa/auth/otp/verify`
 
 ## Steps to Reproduce
 
@@ -33,8 +33,8 @@ X-Ratelimit-Limit: 10
 X-Ratelimit-Remaining: 9
 
 {
-  "contact": "[REDACTED_EMAIL]",
-  "verifiedAt": "[REDACTED_TIMESTAMP]"
+  "contact": "[bravepanda57454@patchsec.site]",
+  "verifiedAt": "[2026-11-02T16:34:00.936Z]"
 }
 ```
 
